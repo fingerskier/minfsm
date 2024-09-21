@@ -1,0 +1,13 @@
+{
+  "name": "minfsm",
+  "version": "1.0.0",
+  "description": "Minimalist finite-state machine",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
