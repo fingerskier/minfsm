@@ -1,4 +1,4 @@
-# janus-fsm
+# min-fsm
 Minimalist finite-state machine
 
 
