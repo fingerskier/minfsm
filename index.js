@@ -1,44 +1,72 @@
-class StateMachine {
+export default class StateMachine {
+  #at = null
+  
+  #prevTime
+  #states = {}
+  
+  current = null
+  
+  
   constructor(config) {
-    this.states = config.states || {}
-    this.at = config.initial || null
+    this.#states = config.states
+    this.#at = config.initial
     
-    if (this.at && this.states[this.at]) {
-      this.current = this.states[this.at]
+    if (this.#at && this.#states?.[this.#at]) {
+      this.current = this.#states[this.#at]
       this.current?.enter()
+    } else {
+      throw new Error(`FSM::Must set a valid initial state`)
     }
   }
   
   
-  goto(action) {
+  async act(action) {
+    let transition
+    
     try {
-      const result = {from: this.at, to: action}
+      transition = {from: this.#at, to: action}
       
-      if (this.at) { // can always transition from null to any state
-        if (!this.current.on[action]) 
-          return {...result, error: 'undefined'}
-        
-        if (!this.states[this.current.on[action]]) 
-          return {...result, error: 'missing'}
+      // can always transition from null to any state
+      if (this.#at) { 
+        // if there is no trasition from current to action
+        if (this.current?.on && !this.current.on[action])
+          throw new Error(`FSM::State ${this.#at} to ${action} is undefined`)
+          
+        // if the requested transition is not defined at all
+        if (!this.#states[this.current.on[action]])
+          throw new Error(`FSM::State ${this.current.on[action]} is undefined`)
       }
       
-      this.current?.exit()
+      const exitFx = this.current?.exit
+      if (exitFx && exitFx.constructor.name === 'AsyncFunction') {
+        await exitFx()
+      } else {
+        this.current?.exit()
+      }
       
-      this.at = this.current.on[action]
+      this.#at = this.current.on[action]
       
-      this.current = this.states[this.at]
+      this.current = this.#states[this.#at]
       
-      return this.current?.enter()
+      const enterFx = this.current?.enter
+      if (enterFx && enterFx.constructor.name === 'AsyncFunction') {
+        await enterFx()
+      } else {
+        this.current?.enter()
+      }
+      
+      return transition
     } catch (error) {
-      return {...result, error: 'invalid'}
+      throw error
     }
   }
   
   
-  update(dt) {
+  update() {
+    const now = performance.now()
+    if (!this.#prevTime) this.#prevTime = now
+    const dt = now - this.#prevTime
+    this.#prevTime = now
     if (this.current?.update) this.current?.update(dt)
   }
 }
-
-
-export default StateMachine

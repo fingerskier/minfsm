@@ -20,7 +20,7 @@ progression.forEach(action => {
     console.log('@', fsm.at)
     fsm.update()
     console.log('->', action)
-    console.log('<-', fsm.goto(action))
+    console.log('<-', fsm.act(action))
     console.log('@', fsm.at)
     fsm.update()
     console.log('@', fsm.at)

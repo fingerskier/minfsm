@@ -7,6 +7,7 @@ const config = {
       exit: () => console.log('un-idle'),
       on: {
         start: 'running',
+        stop: 'idle',
       },
     },
     running: {
