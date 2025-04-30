@@ -1,4 +1,4 @@
-import FSM from './index.js'
+import FSM from './StateMachine.js'
 import config from './test.config.js'
 
 const fsm = new FSM(config)
