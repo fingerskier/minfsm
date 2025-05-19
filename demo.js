@@ -1,7 +1,11 @@
-import FSM from './StateMachine.js'
+import FSM from './FSM.js'
 import config from './demo.config.js'
 
+console.clear()
+
 const fsm = new FSM(config)
+
+fsm.chatty = true
 
 const progression = [
   'start',
@@ -14,17 +18,20 @@ const progression = [
   'stop',
 ]
 
+console.log(config)
 
-progression.forEach(action => {
+
+await fsm.update()
+
+for (const action of progression) {
   try {
-    console.log('@', fsm.at)
-    fsm.update()
-    console.log('->', action)
-    console.log('<-', fsm.act(action))
-    console.log('@', fsm.at)
-    fsm.update()
-    console.log('@', fsm.at)
+    await fsm.act(action)
+    console.log('@STATE', fsm.state(), JSON.stringify(fsm.context))
+
+    await fsm.update()
+    await fsm.update()
+    await fsm.update()
   } catch (error) {
     console.error(error)
   }
-})
+}

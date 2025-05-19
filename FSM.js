@@ -8,24 +8,20 @@ export default class FiniteStateMachine {
   #prevTime = null
   #ctx
   
+  chatty = false
   current = null
   
-  constructor({ states = {}, initial = null, context = {} } = {}) {
+  constructor(parm) {
+    const { states, initial, context } = parm
+
     if (!Object.keys(states).length) {
       throw new Error('StateMachine requires at least one state definition')
     }
     
     this.#ctx = {...context}
+    if (this.chatty) console.log('FSM_context', this.#ctx)
     this.#stateDefs = { ...states } // decouple external mutations
     this.#changeTo(initial)
-  }
-  
-  /** 
-   * @description Retrieve the shared context (read‑only by default)
-   * @returns {Object} The shared context
-   */
-  get context() { 
-    return Object.freeze({...this.#ctx})
   }
 
 
@@ -36,15 +32,31 @@ export default class FiniteStateMachine {
    */
   async act(action) {
     if (!action) throw new Error('Action must be a non‑empty string')
+    if (this.chatty) console.log('FSM::act', action)
 
     const targetKey = this.current?.on?.[action] ?? action
 
     if (!this.#stateDefs[targetKey]) {
-      throw new Error(`Undefined target state "${targetKey}" from action "${action}"`)
+      throw new Error(`Undefined transition "${targetKey}" from action "${action}"`)
     }
-    return this.#changeTo(targetKey)
+    await this.#changeTo(targetKey)
+  }
+
+
+  get context() {
+    return Object.freeze({...this.#ctx})
   }
   
+
+  /**
+   * @description Utility fx
+   * @param {string} test
+   * @returns {string} ~ if a test-key is passed return true/false if the current state matches, if no test-key is passed return the current state
+   */
+  state(test) {
+    if (test) return this.#stateKey === test
+    else return this.#stateKey
+  }
   
 
   /**
@@ -55,6 +67,7 @@ export default class FiniteStateMachine {
   async #changeTo(nextKey) {
     if (this.current?.exit) {
       await this.current.exit(this.#ctx)
+      if (this.chatty) console.log('FSM::exited', this.current?.name)
     }
 
     this.#stateKey = nextKey
@@ -62,7 +75,8 @@ export default class FiniteStateMachine {
     this.#prevTime = (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
     if (this.current?.enter) {
-      return await this.current.enter(this.#ctx)
+      await this.current.enter(this.#ctx)
+      if (this.chatty) console.log('FSM::entered', this.current?.name)
     }
   }
 
@@ -79,5 +93,6 @@ export default class FiniteStateMachine {
     this.#prevTime = now
 
     await this.current.update(dt, this.#ctx)
+    // if (this.chatty) console.log('FSM::updated', this.current?.name)
   }
 }

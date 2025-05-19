@@ -1,28 +1,39 @@
 const config = {
+  context: {
+    idling: true,
+    idleCount: 0,
+    running: false,
+    runningCount: 0,
+    paused: false,
+    pausedCount: 0,
+  },
   initial: 'idle',
   states: {
     idle: {
-      enter: () => 'idle',
-      update: () => console.log('idling'),
-      exit: () => console.log('un-idle'),
+      name: 'idle',
+      enter: async(ctx) => ctx.idling = true,
+      update: async(dt, ctx) => ctx.idleCount++,
+      exit: async(ctx) => ctx.idling = false,
       on: {
         start: 'running',
         stop: 'idle',
       },
     },
     running: {
-      enter: () => 'run',
-      // update: () => console.log('running'),
-      exit: () => console.log('un-run'),
+      name: 'running',
+      enter: async(ctx) => ctx.running = true,
+      update: async(dt, ctx) => ctx.runningCount++,
+      exit: async(ctx) => ctx.running = false,
       on: {
         stop: 'idle',
         pause: 'paused',
       },
     },
     paused: {
-      enter: () => 'pause',
-      update: () => console.log('paused'),
-      exit: () => console.log('un-pause'),
+      name: 'paused',
+      enter: async(ctx) => ctx.paused = true,
+      update: async(dt, ctx) => ctx.pausedCount++,
+      exit: async(ctx) => ctx.paused = false,
       on: {
         resume: 'running',
         stop: 'idle',

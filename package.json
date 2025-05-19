@@ -1,6 +1,6 @@
 {
   "name": "minfsm",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Minimalist finite-state machine",
   "main": "index.js",
   "type": "module",
