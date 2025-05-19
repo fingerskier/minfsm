@@ -5,13 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test:raw": "node test.js",
-    "test": "vitest"
+    "test:raw": "node demo.js",
+    "test": "node --test"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "vitest": "^3.1.2"
   }
 }

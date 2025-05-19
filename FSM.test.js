@@ -1,113 +1,101 @@
-// StateMachine.test.js
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import StateMachine from './FSM.js';   // ← tweak the path
+import { describe, it, beforeEach } from 'node:test'
+import assert from 'node:assert/strict'
+import FSM from './FSM.js'
+
+function spy(fn = () => {}) {
+  function wrapper(...args) {
+    wrapper.calls.push(args)
+    return fn(...args)
+  }
+  wrapper.calls = []
+  return wrapper
+}
+
+const baseCtx = {
+  answer: 42,
+  data: [{
+    highlight: false,
+    active: true,
+    warning: -7,
+    danger: 0,
+    error: 1,
+  }]
+}
 
 describe('Minimalist FSM', () => {
   let fsm
   let states
-  const ctx = { 
-    log: vi.fn(), 
-    answer: 42,
-    data: [{
-      highlight: false,
-      active: true,
-      warning: -7,
-      danger: 0,
-      error: 1,
-    }],
-    counter: 0
-  }
+  let ctx
 
   beforeEach(() => {
-    // spies let us assert enter/update/exit calls
+    ctx = { ...baseCtx, log: spy(), counter: 0 }
     states = {
       idle: {
-        enter : vi.fn().mockImplementation(ctx => {
-          ctx.counter = 0
-          return 'idle'
-        }),
-        update: vi.fn(),
-        exit  : vi.fn(),
-        on    : { start: 'running', stop: 'idle' },
+        enter: spy(c => { c.counter = 0; return 'idle' }),
+        update: spy(),
+        exit: spy(),
+        on: { start: 'running', stop: 'idle' }
       },
       running: {
-        enter : vi.fn().mockImplementation(ctx => {
-          ctx.counter++
-          return 'run'
-        }),
-        update: vi.fn(),
-        exit  : vi.fn(),
-        on    : { stop: 'idle', pause: 'paused' },
+        enter: spy(c => { c.counter++; return 'run' }),
+        update: spy(),
+        exit: spy(),
+        on: { stop: 'idle', pause: 'paused' }
       },
       paused: {
-        enter : vi.fn().mockImplementation(ctx => {
-          ctx.counter *= 2
-          return 'pause'
-        }),
-        update: vi.fn(),
-        exit  : vi.fn(),
-        on    : { resume: 'running', stop: 'idle' },
-      },
+        enter: spy(c => { c.counter *= 2; return 'pause' }),
+        update: spy(),
+        exit: spy(),
+        on: { resume: 'running', stop: 'idle' }
+      }
     }
 
-    fsm = new StateMachine({
-      initial: 'idle',
-      states,
-      context: ctx,
-    })
+    fsm = new FSM({ initial: 'idle', states, context: ctx })
   })
 
   it('starts in the initial state and calls enter(ctx)', () => {
-    expect(fsm.current).toBe(states.idle)
-    expect(states.idle.enter).toHaveBeenCalledTimes(1)
-    expect(states.idle.enter).toHaveBeenCalledWith(ctx)
+    assert.strictEqual(fsm.current, states.idle)
+    assert.strictEqual(states.idle.enter.calls.length, 1)
+    const passed = states.idle.enter.calls[0][0]
+    assert.notStrictEqual(passed, ctx)
+    assert.deepStrictEqual(passed, ctx)
   })
 
   it('update() forwards (dt, ctx) to state.update', async () => {
     await fsm.update()
-    expect(states.idle.update).toHaveBeenCalledTimes(1)
-    const [dt, passedCtx] = states.idle.update.mock.calls[0]
-    expect(typeof dt).toBe('number')
-    expect(passedCtx).toStrictEqual(fsm.context)
+    assert.strictEqual(states.idle.update.calls.length, 1)
+    const [dt, passedCtx] = states.idle.update.calls[0]
+    assert.equal(typeof dt, 'number')
+    assert.deepStrictEqual(passedCtx, fsm.context)
   })
 
-  it('transitions idle ➜ running on "start"', async () => {
+  it('transitions idle \u2794 running on "start"', async () => {
     const ret = await fsm.act('start')
-
-    expect(ret).toBe('run')
-    expect(states.idle.exit).toHaveBeenCalledTimes(1)
-    expect(states.running.enter).toHaveBeenCalledTimes(1)
-    expect(fsm.current).toBe(states.running)
+    assert.strictEqual(ret, 'run')
+    assert.strictEqual(states.idle.exit.calls.length, 1)
+    assert.strictEqual(states.running.enter.calls.length, 1)
+    assert.strictEqual(fsm.current, states.running)
   })
 
-  it('supports chained transitions (running ➜ paused)', async () => {
-    await fsm.act('start');      // idle ➜ running
-    await fsm.act('pause');      // running ➜ paused
-
-    expect(states.running.exit).toHaveBeenCalledTimes(1)
-    expect(states.paused.enter).toHaveBeenCalledTimes(1)
-    expect(fsm.current).toBe(states.paused)
+  it('supports chained transitions (running \u2794 paused)', async () => {
+    await fsm.act('start')
+    await fsm.act('pause')
+    assert.strictEqual(states.running.exit.calls.length, 1)
+    assert.strictEqual(states.paused.enter.calls.length, 1)
+    assert.strictEqual(fsm.current, states.paused)
   })
 
   it('throws on undefined actions / targets', async () => {
-    await expect(fsm.act('bogus'))
-      .rejects.toThrow(/Undefined target state/)
+    await assert.rejects(() => fsm.act('bogus'), /Undefined target state/)
   })
 
   it('maintains context mutations across state transitions', async () => {
-    // Start in idle which initializes counter
-    expect(fsm.context.counter).toBe(0)
-    
-    // Transition to running which increments counter
+    assert.strictEqual(fsm.context.counter, 0)
     await fsm.act('start')
-    expect(fsm.context.counter).toBe(1)
-    
-    // Transition to paused which doubles counter
+    assert.strictEqual(fsm.context.counter, 1)
     await fsm.act('pause')
-    expect(fsm.context.counter).toBe(2)
-    
-    // Go back to running which increments again
+    assert.strictEqual(fsm.context.counter, 2)
     await fsm.act('resume')
-    expect(fsm.context.counter).toBe(3)
+    assert.strictEqual(fsm.context.counter, 3)
   })
 })
