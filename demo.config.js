@@ -2,8 +2,8 @@ const config = {
   initial: 'idle',
   states: {
     idle: {
-      enter: () =>'idle',
-      update: ()=>console.log('idling'),
+      enter: () => 'idle',
+      update: () => console.log('idling'),
       exit: () => console.log('un-idle'),
       on: {
         start: 'running',
@@ -11,8 +11,8 @@ const config = {
       },
     },
     running: {
-      enter: () =>'run',
-      // update: ()=>console.log('running'),
+      enter: () => 'run',
+      // update: () => console.log('running'),
       exit: () => console.log('un-run'),
       on: {
         stop: 'idle',
@@ -20,8 +20,8 @@ const config = {
       },
     },
     paused: {
-      enter: () =>'pause',
-      update: ()=>console.log('paused'),
+      enter: () => 'pause',
+      update: () => console.log('paused'),
       exit: () => console.log('un-pause'),
       on: {
         resume: 'running',
@@ -30,6 +30,5 @@ const config = {
     },
   },
 }
-
 
 export default config

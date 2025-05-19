@@ -1,5 +1,5 @@
 import FSM from './StateMachine.js'
-import config from './test.config.js'
+import config from './demo.config.js'
 
 const fsm = new FSM(config)
 
