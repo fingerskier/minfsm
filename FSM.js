@@ -62,7 +62,7 @@ export default class FiniteStateMachine {
     this.#prevTime = (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
     if (this.current?.enter) {
-      return this.current.enter(this.#ctx)
+      return await this.current.enter(this.#ctx)
     }
   }
 
