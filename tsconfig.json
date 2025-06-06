@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",     // TS ≥5.4, works for both ESM & CJS
+    "outDir": "dist",
+    "allowJs": true,                   // keep .js compiling
+    "checkJs": true,                   // type-check .js files
+    "declaration": true,               // emit .d.ts
+    "sourceMap": true,
+    "strict": false
+  },
+  "include": [
+    "*.ts",
+    "*.tsx", 
+    "*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "*.test.js"
+  ]
+}

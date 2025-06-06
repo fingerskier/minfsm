@@ -5,11 +5,15 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "build": "tsc",
     "test:raw": "node demo.js",
     "test": "node --test"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "typescript": "^5.8.3"
+  }
 }

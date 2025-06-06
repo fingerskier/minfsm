@@ -86,7 +86,7 @@ describe('Minimalist FSM', () => {
   })
 
   it('throws on undefined actions / targets', async () => {
-    await assert.rejects(() => fsm.act('bogus'), /Undefined target state/)
+    await assert.rejects(() => fsm.act('bogus'), /Undefined transition/)
   })
 
   it('maintains context mutations across state transitions', async () => {

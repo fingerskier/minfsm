@@ -39,7 +39,7 @@ export default class FiniteStateMachine {
     if (!this.#stateDefs[targetKey]) {
       throw new Error(`Undefined transition "${targetKey}" from action "${action}"`)
     }
-    await this.#changeTo(targetKey)
+    return await this.#changeTo(targetKey)
   }
 
 
@@ -75,8 +75,9 @@ export default class FiniteStateMachine {
     this.#prevTime = (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
     if (this.current?.enter) {
-      await this.current.enter(this.#ctx)
+      const result = await this.current.enter(this.#ctx)
       if (this.chatty) console.log('FSM::entered', this.current?.name)
+      return result
     }
   }
 
