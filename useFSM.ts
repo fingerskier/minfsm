@@ -10,12 +10,8 @@ export interface FsmConfig<C> {
 /** Drive the machine, expose state & helpers */
 export function useFSM<C = unknown>(config: FsmConfig<C>) {
   const [, force] = useState(0);          // quick “force-render”
-  const fsmRef = useRef<FiniteStateMachine | null>(null);
+  const fsmRef = useRef<FiniteStateMachine<C> | null>(new FiniteStateMachine({...config, context: config.context ?? {} as C}))
 
-  // first render → create the machine once
-  if (!fsmRef.current) {
-    fsmRef.current = new FiniteStateMachine(config);
-  }
 
   /** Imperative transition */
   const act = useCallback(async (action: string) => {

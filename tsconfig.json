@@ -3,21 +3,28 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",     // TS ≥5.4, works for both ESM & CJS
+    "jsx": "react-jsx",                // Enable JSX support
     "outDir": "dist",
     "allowJs": true,                   // keep .js compiling
-    "checkJs": true,                   // type-check .js files
+    "checkJs": false,                  // don't type-check .js files to avoid conflicts
     "declaration": true,               // emit .d.ts
     "sourceMap": true,
     "strict": false
   },
   "include": [
-    "*.ts",
-    "*.tsx", 
-    "*.js"
+    "FSM.ts",
+    "useFSM.ts", 
+    "FSMProvider.tsx",
+    "index.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "*.test.js"
+    "*.test.js",
+    "demo.js",
+    "StateMachine.js",
+    "demo.config.js",
+    "demo.ts",
+    "demo.config.ts"
   ]
 }

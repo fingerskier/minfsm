@@ -1,11 +1,10 @@
-# min-fsm
-Minimalist finite-state machine
+# minfsm
+Minimalist finite-state machine with optional React bindings
 
-
-## Usage
+## Core Usage (No React Required)
 
 ```js
-import FSM from 'min-fsm'
+import FSM from 'minfsm'
 
 const fsm = new FSM({
   initial: 'idle',
@@ -48,6 +47,69 @@ fsm.act('stop')
 ...
 ```
 
+## React Bindings (Optional)
+
+If you're using React, you can use the provided hooks and context:
+
+### Prerequisites
+```bash
+npm install react  # React 16.8+ required for hooks
+```
+
+### React Hook Usage
+```jsx
+import { useFSM } from 'minfsm/useFSM'
+
+function MyComponent() {
+  const { state, act, context } = useFSM({
+    initial: 'idle',
+    states: {
+      idle: { on: { start: 'running' } },
+      running: { on: { stop: 'idle' } },
+    },
+  })
+
+  return (
+    <div>
+      <p>Current state: {state}</p>
+      <button onClick={() => act('start')}>Start</button>
+      <button onClick={() => act('stop')}>Stop</button>
+    </div>
+  )
+}
+```
+
+### React Context Provider
+```jsx
+import { FSMProvider, useFsm } from 'minfsm/FSMProvider'
+
+function App() {
+  const config = {
+    initial: 'idle',
+    states: {
+      idle: { on: { start: 'running' } },
+      running: { on: { stop: 'idle' } },
+    },
+  }
+
+  return (
+    <FSMProvider config={config}>
+      <MyComponent />
+    </FSMProvider>
+  )
+}
+
+function MyComponent() {
+  const { state, act } = useFsm()
+  
+  return (
+    <div>
+      <p>Current state: {state}</p>
+      <button onClick={() => act('start')}>Start</button>
+    </div>
+  )
+}
+```
 
 ## Configuration Basis
 

@@ -7,7 +7,7 @@ const fsm = new FSM(config)
 
 fsm.chatty = true
 
-const progression = [
+const progression: string[] = [
   'start',
   'stop',
   'stop',
@@ -19,7 +19,6 @@ const progression = [
 ]
 
 console.log(config)
-
 
 await fsm.update()
 
@@ -34,4 +33,4 @@ for (const action of progression) {
   } catch (error) {
     console.error(error)
   }
-}
+} 

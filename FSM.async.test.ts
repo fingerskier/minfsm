@@ -1,12 +1,12 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import FSM from './FSM.js'
+import FSM from './dist/FSM.js'
 
-const wait = ms => new Promise(r => setTimeout(r, ms))
+const wait = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms))
 
 describe('FSM async behaviour', () => {
   it('awaits async handlers and returns value from enter', async () => {
-    const calls = []
+    const calls: string[] = []
     const fsm = new FSM({
       initial: 'one',
       states: {
@@ -40,4 +40,4 @@ describe('FSM async behaviour', () => {
     await fsm.act('b')
     assert.strictEqual(fsm.current, states.b)
   })
-})
+}) 

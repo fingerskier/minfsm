@@ -1,8 +1,23 @@
+export type StateDef<C> = {
+  name: string
+  enter?: (ctx: C) => Promise<void>
+  update?: (dt: number, ctx: C) => Promise<void>
+  exit?: (ctx: C) => Promise<void>
+  on?: Record<string, string>
+}
+
+export type FsmConfig<C> = {
+  initial: string
+  states: Record<string, StateDef<C>>
+  context: C
+}
+
+
 /**
  * @description A minimalist finite state machine
  * @class FiniteStateMachine
  */
-export default class FiniteStateMachine {
+export default class FiniteStateMachine<C> {
   #stateDefs
   #stateKey
   #prevTime = null
@@ -11,8 +26,8 @@ export default class FiniteStateMachine {
   chatty = false
   current = null
   
-  constructor(parm) {
-    const { states, initial, context } = parm
+  constructor(parm: FsmConfig<C>) {
+    const { states, initial, context } = parm as FsmConfig<C>
 
     if (!Object.keys(states).length) {
       throw new Error('StateMachine requires at least one state definition')
@@ -30,7 +45,7 @@ export default class FiniteStateMachine {
    * @param {string} action
    * @returns {Promise<*>} value returned by new state’s enter()
    */
-  async act(action) {
+  async act(action: string): Promise<string | void> {
     if (!action) throw new Error('Action must be a non‑empty string')
     if (this.chatty) console.log('FSM::act', action)
 
@@ -53,7 +68,7 @@ export default class FiniteStateMachine {
    * @param {string} test
    * @returns {string} ~ if a test-key is passed return true/false if the current state matches, if no test-key is passed return the current state
    */
-  state(test) {
+  state(test?: string): string | boolean {
     if (test) return this.#stateKey === test
     else return this.#stateKey
   }
@@ -64,7 +79,7 @@ export default class FiniteStateMachine {
    * @param {string|null} nextKey
    * @returns {Promise<*>} value returned by new state’s enter()
    */
-  async #changeTo(nextKey) {
+  async #changeTo(nextKey: string): Promise<string | void> {
     if (this.current?.exit) {
       await this.current.exit(this.#ctx)
       if (this.chatty) console.log('FSM::exited', this.current?.name)
@@ -86,7 +101,7 @@ export default class FiniteStateMachine {
    * @description Update/tick the state machine
    * @returns {Promise<void>}
    */
-  async update() {
+  async update(): Promise<void> {
     if (!this.current?.update) return
 
     const now = (typeof performance !== 'undefined' ? performance.now() : Date.now())
@@ -94,6 +109,5 @@ export default class FiniteStateMachine {
     this.#prevTime = now
 
     await this.current.update(dt, this.#ctx)
-    // if (this.chatty) console.log('FSM::updated', this.current?.name)
   }
 }

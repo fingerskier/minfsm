@@ -1,19 +1,44 @@
 {
   "name": "minfsm",
-  "version": "2.2.0",
-  "description": "Minimalist finite-state machine",
-  "main": "index.js",
+  "version": "3.0.0",
+  "description": "Minimalist finite-state machine with optional React bindings",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./useFSM": {
+      "types": "./dist/useFSM.d.ts",
+      "import": "./dist/useFSM.js"
+    },
+    "./FSMProvider": {
+      "types": "./dist/FSMProvider.d.ts",
+      "import": "./dist/FSMProvider.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
-    "test:raw": "node demo.js",
-    "test": "node --test"
+    "build:demo": "tsc demo.ts demo.config.ts --outDir demo-dist --module ES2022 --target ES2022 --moduleResolution bundler",
+    "prepublishOnly": "npm run build",
+    "test:raw": "npm run build && npm run build:demo && node demo-dist/demo.js",
+    "test": "npm run build && tsx --test *.test.ts"
   },
-  "keywords": [],
+  "keywords": ["fsm", "state-machine", "react", "hooks"],
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.15.30",
+    "@types/react": "^18.0.0",
+    "react": "^18.0.0",
+    "tsx": "^4.7.1",
     "typescript": "^5.8.3"
   }
 }

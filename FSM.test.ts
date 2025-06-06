@@ -1,14 +1,32 @@
 import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
-import FSM from './FSM.js'
+import FSM from './dist/FSM.js'
 
-function spy(fn = () => {}) {
-  function wrapper(...args) {
+interface SpyFunction<T extends any[] = any[], R = any> {
+  (...args: T): R
+  calls: T[]
+}
+
+function spy<T extends any[] = any[], R = any>(fn: (...args: T) => R = (() => {}) as any): SpyFunction<T, R> {
+  function wrapper(...args: T): R {
     wrapper.calls.push(args)
     return fn(...args)
   }
   wrapper.calls = []
   return wrapper
+}
+
+interface TestContext {
+  answer: number
+  data: Array<{
+    highlight: boolean
+    active: boolean
+    warning: number
+    danger: number
+    error: number
+  }>
+  log: SpyFunction
+  counter: number
 }
 
 const baseCtx = {
@@ -23,27 +41,27 @@ const baseCtx = {
 }
 
 describe('Minimalist FSM', () => {
-  let fsm
-  let states
-  let ctx
+  let fsm: FSM
+  let states: any
+  let ctx: TestContext
 
   beforeEach(() => {
     ctx = { ...baseCtx, log: spy(), counter: 0 }
     states = {
       idle: {
-        enter: spy(c => { c.counter = 0; return 'idle' }),
+        enter: spy((c: TestContext) => { c.counter = 0; return 'idle' }),
         update: spy(),
         exit: spy(),
         on: { start: 'running', stop: 'idle' }
       },
       running: {
-        enter: spy(c => { c.counter++; return 'run' }),
+        enter: spy((c: TestContext) => { c.counter++; return 'run' }),
         update: spy(),
         exit: spy(),
         on: { stop: 'idle', pause: 'paused' }
       },
       paused: {
-        enter: spy(c => { c.counter *= 2; return 'pause' }),
+        enter: spy((c: TestContext) => { c.counter *= 2; return 'pause' }),
         update: spy(),
         exit: spy(),
         on: { resume: 'running', stop: 'idle' }
@@ -69,7 +87,7 @@ describe('Minimalist FSM', () => {
     assert.deepStrictEqual(passedCtx, fsm.context)
   })
 
-  it('transitions idle \u2794 running on "start"', async () => {
+  it('transitions idle → running on "start"', async () => {
     const ret = await fsm.act('start')
     assert.strictEqual(ret, 'run')
     assert.strictEqual(states.idle.exit.calls.length, 1)
@@ -77,7 +95,7 @@ describe('Minimalist FSM', () => {
     assert.strictEqual(fsm.current, states.running)
   })
 
-  it('supports chained transitions (running \u2794 paused)', async () => {
+  it('supports chained transitions (running → paused)', async () => {
     await fsm.act('start')
     await fsm.act('pause')
     assert.strictEqual(states.running.exit.calls.length, 1)
@@ -98,4 +116,4 @@ describe('Minimalist FSM', () => {
     await fsm.act('resume')
     assert.strictEqual(fsm.context.counter, 3)
   })
-})
+}) 
