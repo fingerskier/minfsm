@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import React, { ReactElement } from "react";
 import { JSDOM } from "jsdom";
 import { render, screen, fireEvent, cleanup, act } from "@testing-library/react";
-import { useFSM } from "../useFSM.js";
-import { FSMProvider, useFsm } from "../FSMProvider.js";
+import { useFSM } from "../useFSM";
+import { FSMProvider, useFsm } from "../FSMProvider";
 
 let dom: JSDOM | null = null;
 let originalRaf: typeof globalThis.requestAnimationFrame;
