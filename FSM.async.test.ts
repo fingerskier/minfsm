@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import FSM from './dist/FSM.js'
+import FSM from './FSM'
 
 const wait = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms))
 

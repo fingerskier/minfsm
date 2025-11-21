@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
-import FSM from './dist/FSM.js'
+import FSM from './FSM'
 
 interface SpyFunction<T extends any[] = any[], R = any> {
   (...args: T): R

@@ -29,7 +29,7 @@
     "build:demo": "tsc demo.ts demo.config.ts --outDir demo-dist --module ES2022 --target ES2022 --moduleResolution bundler",
     "prepublishOnly": "npm run build",
     "test:raw": "npm run build && npm run build:demo && node demo-dist/demo.js",
-    "test": "npm run build && tsx --test \"**/*.test.ts\" \"**/*.test.tsx\""
+    "test": "tsx --test FSM.test.ts FSM.async.test.ts FSM.behavior.test.ts __tests__/useFSM.react.test.tsx"
   },
   "keywords": ["fsm", "state-machine", "react", "hooks"],
   "author": "",
