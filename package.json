@@ -29,14 +29,17 @@
     "build:demo": "tsc demo.ts demo.config.ts --outDir demo-dist --module ES2022 --target ES2022 --moduleResolution bundler",
     "prepublishOnly": "npm run build",
     "test:raw": "npm run build && npm run build:demo && node demo-dist/demo.js",
-    "test": "npm run build && tsx --test *.test.ts"
+    "test": "npm run build && tsx --test \"**/*.test.ts\" \"**/*.test.tsx\""
   },
   "keywords": ["fsm", "state-machine", "react", "hooks"],
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@testing-library/react": "^16.2.0",
     "@types/node": "^22.15.30",
     "@types/react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "jsdom": "^26.0.0",
     "react": "^18.0.0",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
