@@ -7,6 +7,8 @@ import { useFSM } from "../useFSM.js";
 import { FSMProvider, useFsm } from "../FSMProvider.js";
 
 let dom: JSDOM | null = null;
+let originalRaf: typeof globalThis.requestAnimationFrame;
+let originalCancelRaf: typeof globalThis.cancelAnimationFrame;
 
 before(() => {
   dom = new JSDOM("<!doctype html><html><body></body></html>");
@@ -14,15 +16,24 @@ before(() => {
   globalThis.window = window as unknown as typeof globalThis.window;
   globalThis.document = window.document;
   globalThis.navigator = window.navigator as Navigator;
+
+  originalRaf =
+    globalThis.requestAnimationFrame ??
+    window.requestAnimationFrame ??
+    ((cb: FrameRequestCallback) => setTimeout(cb, 0)) as any;
+  originalCancelRaf =
+    globalThis.cancelAnimationFrame ??
+    window.cancelAnimationFrame ??
+    ((handle: ReturnType<typeof setTimeout>) => clearTimeout(handle));
+
+  globalThis.requestAnimationFrame = originalRaf;
+  globalThis.cancelAnimationFrame = originalCancelRaf;
 });
 
 after(() => {
   dom?.window.close();
   dom = null;
 });
-
-const originalRaf = globalThis.requestAnimationFrame;
-const originalCancelRaf = globalThis.cancelAnimationFrame;
 
 beforeEach(() => {
   cleanup();
