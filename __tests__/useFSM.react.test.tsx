@@ -2,7 +2,7 @@ import { describe, it, before, after, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import React, { ReactElement } from "react";
 import { JSDOM } from "jsdom";
-import { render, screen, fireEvent, cleanup, act } from "@testing-library/react";
+import { render, fireEvent, cleanup, act } from "@testing-library/react";
 import { useFSM } from "../useFSM";
 import { FSMProvider, useFsm } from "../FSMProvider";
 
@@ -15,7 +15,13 @@ before(() => {
   const { window } = dom;
   globalThis.window = window as unknown as typeof globalThis.window;
   globalThis.document = window.document;
-  globalThis.navigator = window.navigator as Navigator;
+
+  // Use Object.defineProperty to handle read-only navigator property
+  Object.defineProperty(globalThis, 'navigator', {
+    value: window.navigator,
+    configurable: true,
+    writable: true,
+  });
 
   originalRaf =
     globalThis.requestAnimationFrame ??
@@ -35,14 +41,10 @@ after(() => {
   dom = null;
 });
 
-beforeEach(() => {
-  cleanup();
-});
-
 afterEach(() => {
+  cleanup();
   globalThis.requestAnimationFrame = originalRaf;
   globalThis.cancelAnimationFrame = originalCancelRaf;
-  cleanup();
 });
 
 function renderWithProvider(ui: ReactElement, config: any) {
@@ -74,17 +76,17 @@ describe("useFSM React bindings", () => {
       );
     }
 
-    render(<Counter />);
+    const { getByTestId, getByText } = render(<Counter />);
 
-    assert.equal(screen.getByTestId("state").textContent, "idle");
-    assert.equal(screen.getByTestId("count").textContent, "0");
+    assert.equal(getByTestId("state").textContent, "idle");
+    assert.equal(getByTestId("count").textContent, "0");
 
     await act(async () => {
-      fireEvent.click(screen.getByText("start"));
+      fireEvent.click(getByText("start"));
     });
 
-    assert.equal(screen.getByTestId("state").textContent, "running");
-    assert.equal(screen.getByTestId("count").textContent, "1");
+    assert.equal(getByTestId("state").textContent, "running");
+    assert.equal(getByTestId("count").textContent, "1");
   });
 
   it("uses requestAnimationFrame to drive update", async () => {
@@ -135,9 +137,9 @@ describe("useFSM React bindings", () => {
       return <div data-testid="context">{JSON.stringify(context)}</div>;
     }
 
-    render(<NoContext />);
+    const { getByTestId } = render(<NoContext />);
 
-    assert.equal(screen.getByTestId("context").textContent, "{}");
+    assert.equal(getByTestId("context").textContent, "{}");
   });
 
   it("useFsm requires FSMProvider", () => {
@@ -148,12 +150,12 @@ describe("useFSM React bindings", () => {
 
     assert.throws(() => render(<Consumer />));
 
-    renderWithProvider(<Consumer />, {
+    const { getByText } = renderWithProvider(<Consumer />, {
       initial: "idle",
       context: {},
       states: { idle: {} },
     });
 
-    assert.equal(screen.getByText("idle").textContent, "idle");
+    assert.equal(getByText("idle").textContent, "idle");
   });
 });

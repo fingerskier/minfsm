@@ -90,23 +90,25 @@ export default class FiniteStateMachine<C> {
    */
   async #changeTo(nextKey: string): Promise<string | void> {
     const prevKey = this.#stateKey
-    if (this.current?.exit) {
-      await this.current.exit(this.#ctx)
-      if (this.chatty) console.log('FSM::exited', this.current?.name)
-    }
 
     if (prevKey && this.#onAnyExit) {
       await this.#onAnyExit(prevKey, this.#ctx)
+    }
+
+    if (this.current?.exit) {
+      await this.current.exit(this.#ctx)
+      if (this.chatty) console.log('FSM::exited', this.current?.name)
     }
 
     this.#stateKey = nextKey
     this.current = nextKey ? this.#stateDefs[nextKey] : null
     this.#prevTime = (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
-    const result = this.current?.enter ? await this.current.enter(this.#ctx) : undefined
     if (this.#onAnyEnter) {
       await this.#onAnyEnter(nextKey, this.#ctx)
     }
+
+    const result = this.current?.enter ? await this.current.enter(this.#ctx) : undefined
     if (this.chatty) console.log('FSM::entered', this.current?.name)
     return result
   }
