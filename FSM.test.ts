@@ -116,4 +116,37 @@ describe('Minimalist FSM', () => {
     await fsm.act('resume')
     assert.strictEqual(fsm.context.counter, 3)
   })
-}) 
+
+  it('invokes global enter/exit hooks for all transitions', async () => {
+    const events: string[] = []
+    const globalEnter = spy((state: string, passedCtx: TestContext) => {
+      events.push(`enter:${state}`)
+      assert.deepStrictEqual(passedCtx, fsm.context)
+    })
+    const globalExit = spy((state: string, passedCtx: TestContext) => {
+      events.push(`exit:${state}`)
+      assert.deepStrictEqual(passedCtx, fsm.context)
+    })
+
+    fsm = new FSM({ initial: 'idle', states, context: ctx, onAnyEnter: globalEnter, onAnyExit: globalExit })
+
+    assert.deepStrictEqual(events, ['enter:idle'])
+    await fsm.act('start')
+    assert.deepStrictEqual(events, ['enter:idle', 'exit:idle', 'enter:running'])
+    assert.strictEqual(globalEnter.calls.length, 2)
+    assert.strictEqual(globalExit.calls.length, 1)
+  })
+
+  it('runs global update hook even when a state lacks update()', async () => {
+    const onAnyUpdate = spy()
+    const simpleFsm = new FSM({ initial: 'idle', states: { idle: {} }, onAnyUpdate })
+
+    await simpleFsm.update()
+
+    assert.strictEqual(onAnyUpdate.calls.length, 1)
+    const [stateKey, dt, passedCtx] = onAnyUpdate.calls[0]
+    assert.strictEqual(stateKey, 'idle')
+    assert.equal(typeof dt, 'number')
+    assert.deepStrictEqual(passedCtx, simpleFsm.context)
+  })
+})

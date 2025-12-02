@@ -5,6 +5,9 @@ export interface FsmConfig<C> {
   states: Record<string, any>;
   initial: string;
   context?: C;
+  onAnyEnter?: (stateKey: string, ctx: C) => Promise<void> | void;
+  onAnyExit?: (stateKey: string, ctx: C) => Promise<void> | void;
+  onAnyUpdate?: (stateKey: string, dt: number, ctx: C) => Promise<void> | void;
 }
 
 /** Drive the machine, expose state & helpers */
