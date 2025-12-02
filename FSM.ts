@@ -9,7 +9,10 @@ export type StateDef<C> = {
 export type FsmConfig<C> = {
   initial: string
   states: Record<string, StateDef<C>>
-  context: C
+  context?: C
+  onAnyEnter?: (stateKey: string, ctx: C) => Promise<void> | void
+  onAnyExit?: (stateKey: string, ctx: C) => Promise<void> | void
+  onAnyUpdate?: (stateKey: string, dt: number, ctx: C) => Promise<void> | void
 }
 
 
@@ -22,20 +25,26 @@ export default class FiniteStateMachine<C> {
   #stateKey
   #prevTime = null
   #ctx
-  
+  #onAnyEnter
+  #onAnyExit
+  #onAnyUpdate
+
   chatty = false
   current = null
-  
+
   constructor(parm: FsmConfig<C>) {
-    const { states, initial, context } = parm as FsmConfig<C>
+    const { states, initial, context, onAnyEnter, onAnyExit, onAnyUpdate } = parm as FsmConfig<C>
 
     if (!Object.keys(states).length) {
       throw new Error('StateMachine requires at least one state definition')
     }
-    
-    this.#ctx = {...context}
+
+    this.#ctx = { ...(context ?? {} as C) }
     if (this.chatty) console.log('FSM_context', this.#ctx)
     this.#stateDefs = { ...states } // decouple external mutations
+    this.#onAnyEnter = onAnyEnter
+    this.#onAnyExit = onAnyExit
+    this.#onAnyUpdate = onAnyUpdate
     this.#changeTo(initial)
   }
 
@@ -80,20 +89,26 @@ export default class FiniteStateMachine<C> {
    * @returns {Promise<*>} value returned by new state’s enter()
    */
   async #changeTo(nextKey: string): Promise<string | void> {
+    const prevKey = this.#stateKey
     if (this.current?.exit) {
       await this.current.exit(this.#ctx)
       if (this.chatty) console.log('FSM::exited', this.current?.name)
+    }
+
+    if (prevKey && this.#onAnyExit) {
+      await this.#onAnyExit(prevKey, this.#ctx)
     }
 
     this.#stateKey = nextKey
     this.current = nextKey ? this.#stateDefs[nextKey] : null
     this.#prevTime = (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
-    if (this.current?.enter) {
-      const result = await this.current.enter(this.#ctx)
-      if (this.chatty) console.log('FSM::entered', this.current?.name)
-      return result
+    const result = this.current?.enter ? await this.current.enter(this.#ctx) : undefined
+    if (this.#onAnyEnter) {
+      await this.#onAnyEnter(nextKey, this.#ctx)
     }
+    if (this.chatty) console.log('FSM::entered', this.current?.name)
+    return result
   }
 
 
@@ -102,12 +117,16 @@ export default class FiniteStateMachine<C> {
    * @returns {Promise<void>}
    */
   async update(): Promise<void> {
-    if (!this.current?.update) return
-
     const now = (typeof performance !== 'undefined' ? performance.now() : Date.now())
     const dt = this.#prevTime ? now - this.#prevTime : 0
     this.#prevTime = now
 
-    await this.current.update(dt, this.#ctx)
+    if (this.current?.update) {
+      await this.current.update(dt, this.#ctx)
+    }
+
+    if (this.#onAnyUpdate && this.#stateKey) {
+      await this.#onAnyUpdate(this.#stateKey, dt, this.#ctx)
+    }
   }
 }

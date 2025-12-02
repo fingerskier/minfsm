@@ -119,6 +119,10 @@ Reserved properties on the `config` object:
 
 `states` - An object whose properties are the state objects
 
+`context` - Optional initial context object cloned into the machine
+
+`onAnyEnter` / `onAnyExit` / `onAnyUpdate` - Optional hooks called on every state enter/exit/update
+
 
 Reservered properties on each state object:
 
