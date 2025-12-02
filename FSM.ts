@@ -91,9 +91,8 @@ export default class FiniteStateMachine<C> {
   async #changeTo(nextKey: string): Promise<string | void> {
     const prevKey = this.#stateKey
 
-    // Call exit hook before await to ensure synchronous execution
     if (prevKey && this.#onAnyExit) {
-      this.#onAnyExit(prevKey, this.#ctx)
+      await this.#onAnyExit(prevKey, this.#ctx)
     }
 
     if (this.current?.exit) {
@@ -105,9 +104,8 @@ export default class FiniteStateMachine<C> {
     this.current = nextKey ? this.#stateDefs[nextKey] : null
     this.#prevTime = (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
-    // Call enter hook before await to ensure synchronous execution
     if (this.#onAnyEnter) {
-      this.#onAnyEnter(nextKey, this.#ctx)
+      await this.#onAnyEnter(nextKey, this.#ctx)
     }
 
     const result = this.current?.enter ? await this.current.enter(this.#ctx) : undefined
