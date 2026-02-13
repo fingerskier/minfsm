@@ -8,7 +8,7 @@
     "allowJs": true,                   // keep .js compiling
     "checkJs": false,                  // don't type-check .js files to avoid conflicts
     "declaration": true,               // emit .d.ts
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": false
   },
   "include": [

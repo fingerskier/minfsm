@@ -34,6 +34,14 @@
   "keywords": ["fsm", "state-machine", "react", "hooks"],
   "author": "",
   "license": "MIT",
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@testing-library/react": "^16.2.0",
     "@types/node": "^22.15.30",

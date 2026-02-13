@@ -21,7 +21,6 @@ const config: FsmConfig<DemoContext> = {
   initial: 'idle' as const,
   states: {
     idle: {
-      name: 'idle',
       enter: async (ctx: DemoContext) => { ctx.idling = true },
       update: async (dt: number, ctx: DemoContext) => { ctx.idleCount++ },
       exit: async (ctx: DemoContext) => { ctx.idling = false },
@@ -31,7 +30,6 @@ const config: FsmConfig<DemoContext> = {
       },
     },
     running: {
-      name: 'running',
       enter: async (ctx: DemoContext) => { ctx.running = true },
       update: async (dt: number, ctx: DemoContext) => { ctx.runningCount++ },
       exit: async (ctx: DemoContext) => { ctx.running = false },
@@ -41,7 +39,6 @@ const config: FsmConfig<DemoContext> = {
       },
     },
     paused: {
-      name: 'paused',
       enter: async (ctx: DemoContext) => { ctx.paused = true },
       update: async (dt: number, ctx: DemoContext) => { ctx.pausedCount++ },
       exit: async (ctx: DemoContext) => { ctx.paused = false },
