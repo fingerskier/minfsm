@@ -1,32 +1,23 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import FiniteStateMachine from "./FSM";
+import FiniteStateMachine, { FsmConfig } from "./FSM";
+export type { FsmConfig };
 
-export interface FsmConfig<C> {
-  states: Record<string, any>;
-  initial: string;
-  context?: C;
-  onAnyEnter?: (stateKey: string, ctx: C) => Promise<void> | void;
-  onAnyExit?: (stateKey: string, ctx: C) => Promise<void> | void;
-  onAnyUpdate?: (stateKey: string, dt: number, ctx: C) => Promise<void> | void;
-}
-
-/** Drive the machine, expose state & helpers */
 export function useFSM<C = unknown>(config: FsmConfig<C>) {
-  const [, force] = useState(0);          // quick “force-render”
+  const [, force] = useState(0);
   const fsmRef = useRef<FiniteStateMachine<C> | null>(new FiniteStateMachine({...config, context: config.context ?? {} as C}))
 
-
-  /** Imperative transition */
   const act = useCallback(async (action: string) => {
-    await fsmRef.current!.act(action);    // throws on bad action ↔ see class docs :contentReference[oaicite:0]{index=0}
-    force((n) => n + 1);                  // re-render with new state
+    await fsmRef.current!.act(action);
+    force((n) => n + 1);
   }, []);
 
-  // animation-frame update loop (good for game-like UIs)
   useEffect(() => {
+    const hasUpdate = Object.values(config.states).some(s => s?.update);
+    if (!hasUpdate) return;
+
     let id: number;
     const step = async () => {
-      await fsmRef.current!.update();     // runs current state's update(dt, ctx) :contentReference[oaicite:1]{index=1}
+      await fsmRef.current!.update();
       id = requestAnimationFrame(step);
     };
     id = requestAnimationFrame(step);
@@ -35,9 +26,9 @@ export function useFSM<C = unknown>(config: FsmConfig<C>) {
 
   const fsm = fsmRef.current!;
   return {
-    fsm,                                  // rare cases you need full access
-    state: fsm.state(),                   // current state's key
-    context: fsm.context,                 // immutable snapshot
+    fsm,
+    get state() { return fsm.state() as string },
+    get context() { return fsm.context },
     act,
   };
 }

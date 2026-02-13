@@ -124,10 +124,21 @@ Reserved properties on the `config` object:
 `onAnyEnter` / `onAnyExit` / `onAnyUpdate` - Optional hooks called on every state enter/exit/update
 
 
-Reservered properties on each state object:
+Reserved properties on each state object:
 
-`enter` - Function to be called when entering the state
+`enter` - Function called when entering the state; its return value is returned by `act()`
 
-`exit` - Function to be called when exiting the state
+`exit` - Function called when exiting the state
 
-`on` - an object whose propertys' values are the possible transitions from the enclosing state
+`update` - Function called on each `update()` tick with `(dt, ctx)`
+
+`on` - An object mapping action names to target state keys
+
+## Async Initialization
+
+If your initial state has an async `enter()`, await `ready` before using the machine:
+
+```js
+const fsm = new FSM(config)
+await fsm.ready
+```

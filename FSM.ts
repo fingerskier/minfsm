@@ -1,6 +1,6 @@
 export type StateDef<C> = {
-  name: string
-  enter?: (ctx: C) => Promise<void>
+  name?: string
+  enter?: (ctx: C) => any
   update?: (dt: number, ctx: C) => Promise<void>
   exit?: (ctx: C) => Promise<void>
   on?: Record<string, string>
@@ -15,11 +15,10 @@ export type FsmConfig<C> = {
   onAnyUpdate?: (stateKey: string, dt: number, ctx: C) => Promise<void> | void
 }
 
+const now = typeof performance !== 'undefined'
+  ? () => performance.now()
+  : () => Date.now()
 
-/**
- * @description A minimalist finite state machine
- * @class FiniteStateMachine
- */
 export default class FiniteStateMachine<C> {
   #stateDefs
   #stateKey
@@ -28,9 +27,16 @@ export default class FiniteStateMachine<C> {
   #onAnyEnter
   #onAnyExit
   #onAnyUpdate
+  #current: StateDef<C> | null = null
+  #initPromise: Promise<any>
+  #ctxSnapshot: Readonly<C> | null = null
 
   chatty = false
-  current = null
+
+  get current(): StateDef<C> | null { return this.#current }
+
+  /** Resolves when the initial state's enter() has completed */
+  get ready(): Promise<void> { return this.#initPromise.then(() => {}) }
 
   constructor(parm: FsmConfig<C>) {
     const { states, initial, context, onAnyEnter, onAnyExit, onAnyUpdate } = parm as FsmConfig<C>
@@ -40,95 +46,79 @@ export default class FiniteStateMachine<C> {
     }
 
     this.#ctx = { ...(context ?? {} as C) }
-    if (this.chatty) console.log('FSM_context', this.#ctx)
-    this.#stateDefs = { ...states } // decouple external mutations
+    this.#stateDefs = { ...states }
     this.#onAnyEnter = onAnyEnter
     this.#onAnyExit = onAnyExit
     this.#onAnyUpdate = onAnyUpdate
-    this.#changeTo(initial)
+    this.#initPromise = this.#changeTo(initial)
   }
 
-
-  /**
-   * @description Transition via named action
-   * @param {string} action
-   * @returns {Promise<*>} value returned by new state’s enter()
-   */
-  async act(action: string): Promise<string | void> {
+  async act(action: string): Promise<any> {
     if (!action) throw new Error('Action must be a non‑empty string')
     if (this.chatty) console.log('FSM::act', action)
 
-    const targetKey = this.current?.on?.[action] ?? action
+    const targetKey = this.#current?.on?.[action] ?? action
 
     if (!this.#stateDefs[targetKey]) {
       throw new Error(`Undefined transition "${targetKey}" from action "${action}"`)
     }
-    return await this.#changeTo(targetKey)
+    return this.#changeTo(targetKey)
   }
 
-
-  get context() {
-    return Object.freeze({...this.#ctx})
+  get context(): Readonly<C> {
+    if (!this.#ctxSnapshot) {
+      this.#ctxSnapshot = Object.freeze({...this.#ctx})
+    }
+    return this.#ctxSnapshot
   }
-  
 
   /**
-   * @description Utility fx
-   * @param {string} test
-   * @returns {string} ~ if a test-key is passed return true/false if the current state matches, if no test-key is passed return the current state
+   * @param {string} test - if passed, returns true/false for match; otherwise returns current state key
    */
   state(test?: string): string | boolean {
     if (test) return this.#stateKey === test
     else return this.#stateKey
   }
-  
 
-  /**
-   * @description Force change to explicit state
-   * @param {string|null} nextKey
-   * @returns {Promise<*>} value returned by new state’s enter()
-   */
-  async #changeTo(nextKey: string): Promise<string | void> {
+  async #changeTo(nextKey: string): Promise<any> {
     const prevKey = this.#stateKey
 
     if (prevKey && this.#onAnyExit) {
       await this.#onAnyExit(prevKey, this.#ctx)
     }
 
-    if (this.current?.exit) {
-      await this.current.exit(this.#ctx)
-      if (this.chatty) console.log('FSM::exited', this.current?.name)
+    if (this.#current?.exit) {
+      await this.#current.exit(this.#ctx)
+      if (this.chatty) console.log('FSM::exited', this.#current?.name)
     }
 
     this.#stateKey = nextKey
-    this.current = nextKey ? this.#stateDefs[nextKey] : null
-    this.#prevTime = (typeof performance !== 'undefined' ? performance.now() : Date.now())
+    this.#current = nextKey ? this.#stateDefs[nextKey] : null
+    this.#prevTime = now()
 
     if (this.#onAnyEnter) {
       await this.#onAnyEnter(nextKey, this.#ctx)
     }
 
-    const result = this.current?.enter ? await this.current.enter(this.#ctx) : undefined
-    if (this.chatty) console.log('FSM::entered', this.current?.name)
+    const result = this.#current?.enter ? await this.#current.enter(this.#ctx) : undefined
+    if (this.chatty) console.log('FSM::entered', this.#current?.name)
+    this.#ctxSnapshot = null
     return result
   }
 
-
-  /**
-   * @description Update/tick the state machine
-   * @returns {Promise<void>}
-   */
   async update(): Promise<void> {
-    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now())
-    const dt = this.#prevTime ? now - this.#prevTime : 0
-    this.#prevTime = now
+    const t = now()
+    const dt = this.#prevTime ? t - this.#prevTime : 0
+    this.#prevTime = t
 
-    if (this.current?.update) {
-      await this.current.update(dt, this.#ctx)
+    if (this.#current?.update) {
+      await this.#current.update(dt, this.#ctx)
     }
 
     if (this.#onAnyUpdate && this.#stateKey) {
       await this.#onAnyUpdate(this.#stateKey, dt, this.#ctx)
     }
+
+    this.#ctxSnapshot = null
   }
 }

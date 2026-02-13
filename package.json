@@ -1,6 +1,6 @@
 {
   "name": "minfsm",
-  "version": "3.0.0",
+  "version": "3.2.1",
   "description": "Minimalist finite-state machine with optional React bindings",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -34,6 +34,14 @@
   "keywords": ["fsm", "state-machine", "react", "hooks"],
   "author": "",
   "license": "MIT",
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@testing-library/react": "^16.2.0",
     "@types/node": "^22.15.30",
