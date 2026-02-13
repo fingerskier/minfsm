@@ -1,6 +1,6 @@
 {
   "name": "minfsm",
-  "version": "3.0.0",
+  "version": "3.2.1",
   "description": "Minimalist finite-state machine with optional React bindings",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
